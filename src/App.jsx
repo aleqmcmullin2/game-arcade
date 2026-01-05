@@ -70,10 +70,22 @@ const SnakeGame = ({ onBack }) => {
     const handleKeyPress = (e) => {
       if (!gameStarted) return;
       switch (e.key) {
-        case 'ArrowUp': if (direction[0] !== 1) setDirection([-1, 0]); break;
-        case 'ArrowDown': if (direction[0] !== -1) setDirection([1, 0]); break;
-        case 'ArrowLeft': if (direction[1] !== 1) setDirection([0, -1]); break;
-        case 'ArrowRight': if (direction[1] !== -1) setDirection([0, 1]); break;
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          if (direction[0] !== 1) setDirection([-1, 0]); break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          if (direction[0] !== -1) setDirection([1, 0]); break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          if (direction[1] !== 1) setDirection([0, -1]); break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          if (direction[1] !== -1) setDirection([0, 1]); break;
       }
     };
     window.addEventListener('keydown', handleKeyPress);
@@ -145,7 +157,7 @@ const SnakeGame = ({ onBack }) => {
           </button>
         </div>
       )}
-      {gameStarted && !gameOver && <p className="text-slate-400 mt-4">Use arrow keys to move • {lives} {lives === 1 ? 'life' : 'lives'} left</p>}
+      {gameStarted && !gameOver && <p className="text-slate-400 mt-4">Use arrow keys or WASD to move • {lives} {lives === 1 ? 'life' : 'lives'} left</p>}
     </div>
   );
 };
