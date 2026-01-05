@@ -360,19 +360,33 @@ const WhackAMole = ({ onBack }) => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [gameActive, setGameActive] = useState(false);
+  const [difficulty, setDifficulty] = useState(null);
+
+  const difficultySettings = {
+    easy: { speed: 1200, time: 45, moleCount: 1, label: 'Easy', color: 'bg-green-600 hover:bg-green-500' },
+    medium: { speed: 800, time: 30, moleCount: 1, label: 'Medium', color: 'bg-yellow-600 hover:bg-yellow-500' },
+    hard: { speed: 500, time: 20, moleCount: 2, label: 'Hard', color: 'bg-red-600 hover:bg-red-500' },
+  };
 
   useEffect(() => {
-    if (!gameActive) return;
+    if (!gameActive || !difficulty) return;
+    const settings = difficultySettings[difficulty];
     const moleInterval = setInterval(() => {
       setMoles((prev) => {
         const newMoles = Array(9).fill(false);
-        const randomIndex = Math.floor(Math.random() * 9);
-        newMoles[randomIndex] = true;
+        const indices = [];
+        while (indices.length < settings.moleCount) {
+          const randomIndex = Math.floor(Math.random() * 9);
+          if (!indices.includes(randomIndex)) {
+            indices.push(randomIndex);
+            newMoles[randomIndex] = true;
+          }
+        }
         return newMoles;
       });
-    }, 800);
+    }, settings.speed);
     return () => clearInterval(moleInterval);
-  }, [gameActive]);
+  }, [gameActive, difficulty]);
 
   useEffect(() => {
     if (!gameActive || timeLeft <= 0) return;
@@ -399,10 +413,18 @@ const WhackAMole = ({ onBack }) => {
     }
   };
 
-  const startGame = () => {
+  const startGame = (level) => {
+    setDifficulty(level);
     setScore(0);
-    setTimeLeft(30);
+    setTimeLeft(difficultySettings[level].time);
     setGameActive(true);
+    setMoles(Array(9).fill(false));
+  };
+
+  const backToMenu = () => {
+    setDifficulty(null);
+    setGameActive(false);
+    setScore(0);
     setMoles(Array(9).fill(false));
   };
 
@@ -412,27 +434,61 @@ const WhackAMole = ({ onBack }) => {
         <button onClick={onBack} className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg">← Back</button>
         <h2 className="text-3xl font-bold text-white">🔨 Whack-a-Mole</h2>
       </div>
-      <div className="flex gap-8 mb-6 text-white text-xl">
-        <div>Score: {score}</div>
-        <div>Time: {timeLeft}s</div>
-      </div>
-      <div className="grid grid-cols-3 gap-3 bg-amber-900 p-4 rounded-xl">
-        {moles.map((hasMole, index) => (
-          <button
-            key={index}
-            onClick={() => whackMole(index)}
-            className={`w-20 h-20 rounded-full transition-all duration-100 ${
-              hasMole ? 'bg-amber-600 scale-110' : 'bg-amber-800'
-            } flex items-center justify-center text-4xl hover:scale-95 active:scale-90`}
-          >
-            {hasMole ? '🐹' : '🕳️'}
-          </button>
-        ))}
-      </div>
-      {!gameActive && (
-        <button onClick={startGame} className="mt-6 bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl text-xl font-semibold">
-          {timeLeft === 0 ? `Game Over! Score: ${score} - Play Again` : 'Start Game'}
-        </button>
+      
+      {!difficulty ? (
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-white text-xl mb-4">Select Difficulty</p>
+          <div className="flex gap-4">
+            <button onClick={() => startGame('easy')} className="bg-green-600 hover:bg-green-500 text-white px-8 py-4 rounded-xl text-xl font-semibold transition-all hover:scale-105">
+              🌱 Easy
+            </button>
+            <button onClick={() => startGame('medium')} className="bg-yellow-600 hover:bg-yellow-500 text-white px-8 py-4 rounded-xl text-xl font-semibold transition-all hover:scale-105">
+              🔥 Medium
+            </button>
+            <button onClick={() => startGame('hard')} className="bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-xl text-xl font-semibold transition-all hover:scale-105">
+              💀 Hard
+            </button>
+          </div>
+          <div className="mt-6 text-slate-400 text-sm">
+            <p>Easy: Slower moles, 45 seconds</p>
+            <p>Medium: Normal speed, 30 seconds</p>
+            <p>Hard: Fast moles, 2 at once, 20 seconds</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex gap-8 mb-6 text-white text-xl">
+            <div>Score: {score}</div>
+            <div>Time: {timeLeft}s</div>
+            <div className="text-slate-400">({difficultySettings[difficulty].label})</div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 bg-amber-900 p-4 rounded-xl">
+            {moles.map((hasMole, index) => (
+              <button
+                key={index}
+                onClick={() => whackMole(index)}
+                className={`w-20 h-20 rounded-full transition-all duration-100 ${
+                  hasMole ? 'bg-amber-600 scale-110' : 'bg-amber-800'
+                } flex items-center justify-center text-4xl hover:scale-95 active:scale-90`}
+              >
+                {hasMole ? '🐹' : '🕳️'}
+              </button>
+            ))}
+          </div>
+          {!gameActive && timeLeft === 0 && (
+            <div className="mt-6 text-center">
+              <p className="text-white text-2xl font-bold mb-4">Game Over! Score: {score}</p>
+              <div className="flex gap-4">
+                <button onClick={() => startGame(difficulty)} className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl text-lg font-semibold">
+                  Play Again
+                </button>
+                <button onClick={backToMenu} className="bg-slate-600 hover:bg-slate-500 text-white px-6 py-3 rounded-xl text-lg font-semibold">
+                  Change Difficulty
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
